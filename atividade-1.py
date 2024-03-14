@@ -1,6 +1,6 @@
 import pandas as pd
 
-df = pd.read_csv('base/OnlineNewsPopularity.csv') # leitura da base
+df = pd.read_csv('atividades/base/OnlineNewsPopularity.csv') # leitura da base
 
 print(df.columns.to_list) # ver o nome das colunas
 subdf_colunas = ['url', ' n_tokens_title', ' shares'] # subset que irá filtrar
