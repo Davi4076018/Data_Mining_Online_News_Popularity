@@ -2,10 +2,12 @@ import pandas as pd
 from datetime import datetime
 
 def Reducao_drop_columns(df):
-    dropcoluns = [' timedelta', ' n_non_stop_words', ' n_unique_tokens', ' n_non_stop_unique_tokens', ' average_token_length']
+    dropcoluns = [' timedelta', ' n_non_stop_unique_tokens', ' LDA_00', ' LDA_01', ' LDA_02', ' LDA_03', ' LDA_04',
+                  ' global_sentiment_polarity', ' rate_positive_words', ' rate_negative_words']
     colunas = df.columns.values.tolist()
     dropcoluns.extend(colunas[19:31].copy())
-    dropcoluns.extend(colunas[39:60].copy())
+    dropcoluns.extend(colunas[50:60].copy())
+    #dropcoluns = [' timedelta']
     df.drop(dropcoluns, axis=1, inplace=True)
     return df
 
@@ -57,11 +59,25 @@ def Agrupamento_Categoria(df):
     df.drop(colunas, axis=1, inplace=True)
     return df
 
-def Renomeando_columns(df):
+def Renomeando_columns_int(df):
     nomeColunaAnt = ['url', ' n_tokens_title', ' n_tokens_content', ' num_hrefs', ' num_self_hrefs',
             ' num_imgs', ' num_videos', ' num_keywords', ' is_weekend', ' shares']
     nomeColunaNew = ['Link', 'Num_palavras_titulo', 'Num_palavras_conteudo', 'Num_links_gerais', 'Num_links_noticias',
               'Num_imagens', 'Num_videos', 'Num_palavras-chaves', 'Publicado_fim_semana', 'Compartilhamentos']
+    dictionary = dict(zip(nomeColunaAnt, nomeColunaNew))
+    df.rename(columns=dictionary, inplace=True)
+    for coluna in nomeColunaNew:
+        try:
+            df[coluna] = df[coluna].astype(int)
+        except:
+            pass
+    return df
+
+def Renomeando_columns_float(df):
+    nomeColunaAnt = [' average_token_length', ' n_unique_tokens', ' n_non_stop_words',
+                     ' global_subjectivity', ' global_rate_positive_words', ' global_rate_negative_words']
+    nomeColunaNew = ['Comprimento_medio_palavras', 'Taxa_palavras_unicas', 'Taxa_palavras_Continuas',
+                     'Subjetividade_texto', 'Taxa_palavras_positivas', 'Taxa_palavras_negativas']
     dictionary = dict(zip(nomeColunaAnt, nomeColunaNew))
     df.rename(columns=dictionary, inplace=True)
     return df
@@ -79,13 +95,28 @@ def cria_amostragem_data(inicial, final, df):
     mask = (df['Data_Publicado'] >= inicial) & (df['Data_Publicado'] <= final)
     return df.loc[mask]
 
+def Numerizacao_Categoria(row):
+    val = '0'
+    entradas = ['Nenhuma', 'Estilo de vida', 'Entretenimento',
+                'Negocios', 'Midia Social', 'Tecnologia', 'Mundo']
+    saidas = ['0', '1', '2',
+              '3', '4', '5', '6']
+    for n in range(len(entradas)):
+        if row['Categoria_Noticia'] == entradas[n]:
+            val = saidas[n]
+            break
+    return val
 
-#print(colunas[39:60])
-#subdf_colunas = ['url', ' n_tokens_title', ' shares'] # subset que irá filtrar
-#subdf = df[subdf_colunas] # criação do subset
-#subdf['num_palavras_titulo'] = subdf['num_palavras_titulo'].astype(int)
-#subdf.sort_values(by=['compartilhamentos'], inplace=True, ascending=False)
-#subdf.reset_index(drop = True, inplace = True)
+def Numerizacao_Dias_Semana(row):
+    val = '0'
+    entradas = ['Segunda-Feira', 'Terça-Feira', 'Quarta-Feira', 'Quinta-Feira', 'Sexta-Feira', 'Sábado', 'Domingo']
+    saidas = ['2', '3', '4', '5', '6', '7', '1']
+    for n in range(len(entradas)):
+        if row['Dia_Publicado'] == entradas[n]:
+            val = saidas[n]
+            break
+    return val
+
 
 
 
@@ -95,9 +126,15 @@ if __name__ == "__main__":
     df = Criacao_data_column(df)
     df = Agrupamento_Dias_Semana(df)
     df = Agrupamento_Categoria(df)
-    df = Renomeando_columns(df)
-    df = Conversao_columns_int(df)
-    #df = cria_amostragem_data('2013-01-01', '2013-12-31', df)
-    print(df.to_string())
-    print(df)
-    df.to_csv('bases/OnlineNewsPopularity_pre-processamento_1.csv', sep=',')
+    df = Renomeando_columns_int(df)
+    df = Renomeando_columns_float(df)
+    df['Dia_Publicado'] = df.apply(Numerizacao_Dias_Semana, axis=1)
+    df['Categoria_Noticia'] = df.apply(Numerizacao_Categoria, axis=1)
+    print(df.columns.values.tolist())
+    df2013 = cria_amostragem_data('2013-01-01', '2013-12-31', df)
+    df2014 = cria_amostragem_data('2014-01-01', '2014-12-31', df)
+    #print(df.to_string())
+    #print(df)
+    df.to_csv('bases/OnlineNewsPopularity_pre-processamento_1.csv', sep=',', index=False)
+    df2013.to_csv('bases/OnlineNewsPopularity_pre-processamento_1_2013.csv', sep=',', index=False)
+    df2014.to_csv('bases/OnlineNewsPopularity_pre-processamento_1_2014.csv', sep=',', index=False)
