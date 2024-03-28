@@ -117,7 +117,15 @@ def Numerizacao_Dias_Semana(row):
             break
     return val
 
-
+def classifica_niv_popularidade(row):
+    val = '0'
+    entradas = [dfcond_nv_popu['20%'], dfcond_nv_popu['40%'], dfcond_nv_popu['60%'], dfcond_nv_popu['80%'], dfcond_nv_popu['max']]
+    saidas = ['1', '2', '3', '4', '5']
+    for n in range(len(entradas)):
+        if int(row['Compartilhamentos']) <= int(entradas[n]):
+            val = saidas[n]
+            break
+    return val
 
 
 if __name__ == "__main__":
@@ -130,6 +138,8 @@ if __name__ == "__main__":
     df = Renomeando_columns_float(df)
     df['Dia_Publicado'] = df.apply(Numerizacao_Dias_Semana, axis=1)
     df['Categoria_Noticia'] = df.apply(Numerizacao_Categoria, axis=1)
+    dfcond_nv_popu = df['Compartilhamentos'].describe(percentiles=[.20, .40, .60, .80])
+    df['Nivel_Popularidade'] = df.apply(classifica_niv_popularidade, axis=1)
     print(df.columns.values.tolist())
     df2013 = cria_amostragem_data('2013-01-01', '2013-12-31', df)
     df2014 = cria_amostragem_data('2014-01-01', '2014-12-31', df)
