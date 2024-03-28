@@ -1,6 +1,8 @@
 import pandas as pd
 from datetime import datetime
 
+dfcond_nv_popu = pd.DataFrame()
+
 def Reducao_drop_columns(df):
     dropcoluns = [' timedelta', ' n_non_stop_unique_tokens', ' LDA_00', ' LDA_01', ' LDA_02', ' LDA_03', ' LDA_04',
                   ' global_sentiment_polarity', ' rate_positive_words', ' rate_negative_words']
@@ -127,24 +129,31 @@ def classifica_niv_popularidade(row):
             break
     return val
 
+def gera_amostragem(data_inicial='2013-01-01', data_final='2014-12-31', gerar_csv=True, if_existente=False):
+    global dfcond_nv_popu
+    if not if_existente:
+        df = pd.read_csv('bases/OnlineNewsPopularity.csv')  # leitura da base
+        df = Reducao_drop_columns(df)
+        df = Criacao_data_column(df)
+        df = Agrupamento_Dias_Semana(df)
+        df = Agrupamento_Categoria(df)
+        df = Renomeando_columns_int(df)
+        df = Renomeando_columns_float(df)
+        df['Dia_Publicado'] = df.apply(Numerizacao_Dias_Semana, axis=1)
+        df['Categoria_Noticia'] = df.apply(Numerizacao_Categoria, axis=1)
+        dfcond_nv_popu = df['Compartilhamentos'].describe(percentiles=[.20, .40, .60, .80])
+        df['Nivel_Popularidade'] = df.apply(classifica_niv_popularidade, axis=1)
+        df = cria_amostragem_data(data_inicial, data_final, df)
+        if gerar_csv:
+            df.to_csv('bases/OnlineNewsPopularity_pre-processamento_' + data_inicial + '_to_' + data_final + '.csv', sep=',', index=False)
+        return df
+    else:
+        try:
+            return pd.read_csv('bases/OnlineNewsPopularity_pre-processamento_' + data_inicial + '_to_' + data_final + '.csv')
+        except:
+            gera_amostragem(data_inicial=data_inicial, data_final=data_final, gerar_csv=True, if_existente=False)
+
+
 
 if __name__ == "__main__":
-    df = pd.read_csv('bases/OnlineNewsPopularity.csv')  # leitura da base
-    df = Reducao_drop_columns(df)
-    df = Criacao_data_column(df)
-    df = Agrupamento_Dias_Semana(df)
-    df = Agrupamento_Categoria(df)
-    df = Renomeando_columns_int(df)
-    df = Renomeando_columns_float(df)
-    df['Dia_Publicado'] = df.apply(Numerizacao_Dias_Semana, axis=1)
-    df['Categoria_Noticia'] = df.apply(Numerizacao_Categoria, axis=1)
-    dfcond_nv_popu = df['Compartilhamentos'].describe(percentiles=[.20, .40, .60, .80])
-    df['Nivel_Popularidade'] = df.apply(classifica_niv_popularidade, axis=1)
-    print(df.columns.values.tolist())
-    df2013 = cria_amostragem_data('2013-01-01', '2013-12-31', df)
-    df2014 = cria_amostragem_data('2014-01-01', '2014-12-31', df)
-    #print(df.to_string())
-    #print(df)
-    df.to_csv('bases/OnlineNewsPopularity_pre-processamento_1.csv', sep=',', index=False)
-    df2013.to_csv('bases/OnlineNewsPopularity_pre-processamento_1_2013.csv', sep=',', index=False)
-    df2014.to_csv('bases/OnlineNewsPopularity_pre-processamento_1_2014.csv', sep=',', index=False)
+    gera_amostragem()

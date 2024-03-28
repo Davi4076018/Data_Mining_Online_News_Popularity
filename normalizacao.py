@@ -6,6 +6,8 @@ from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+from pre_processamento_dos_dados import gera_amostragem
+
 def z_score_nomalization(df, target, features):
     x = df.loc[:, features].values
     x_zscore = StandardScaler().fit_transform(x)
@@ -68,9 +70,7 @@ def VisualizePca3dProjection(finalDf, targetColumn):
 
 
 if __name__ == "__main__":
-    df = pd.read_csv('bases/OnlineNewsPopularity_pre-processamento_1.csv')
-    #df = pd.read_csv('bases/OnlineNewsPopularity_pre-processamento_1_2013.csv')
-    #df = pd.read_csv('bases/OnlineNewsPopularity_pre-processamento_1_2014.csv')
+    df = gera_amostragem(data_inicial='2013-01-01', data_final='2014-12-31', gerar_csv=True, if_existente=True)
     print(df.describe().to_string())
     target = 'Nivel_Popularidade'
     features = df.drop(['Link', 'Nivel_Popularidade', 'Data_Publicado'], axis=1).columns.values.tolist()
