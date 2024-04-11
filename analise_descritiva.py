@@ -85,12 +85,12 @@ if __name__ == "__main__":
     df = gera_amostragem(data_inicial='2013-01-01', data_final='2013-12-31', gerar_csv=True, if_existente=True)
 
     target = 'Nivel_Popularidade'
-    features = df.drop(['Link', 'Nivel_Popularidade', 'Data_Publicado'], axis=1).columns.values.tolist()
+    features = df.columns.values.tolist()
 
     print(df.describe().to_string())
     print(df.columns.values.tolist())
-    columns = ['Num_palavras_titulo', 'Categoria_Noticia', 'Num_palavras-chaves']
-    classes = [8, 6, 5]
+    columns = [' is_weekend']
+    classes = [2]
 
     for i in range(len(columns)):
         frequencia(df, columns[i], classes[i])

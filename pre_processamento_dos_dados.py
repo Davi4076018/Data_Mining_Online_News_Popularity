@@ -4,12 +4,12 @@ from datetime import datetime
 dfcond_nv_popu = pd.DataFrame()
 
 def Reducao_drop_columns(df):
-    dropcoluns = [' timedelta', ' n_non_stop_unique_tokens', ' LDA_00', ' LDA_01', ' LDA_02', ' LDA_03', ' LDA_04',
-                  ' global_sentiment_polarity', ' rate_positive_words', ' rate_negative_words']
+    dropcoluns = [' timedelta', 'Data_Publicado', 'url', ' shares']
+    #dropcoluns = [' timedelta', ' n_non_stop_unique_tokens', ' LDA_00', ' LDA_01', ' LDA_02', ' LDA_03', ' LDA_04',
+    #              ' global_sentiment_polarity', ' rate_positive_words', ' rate_negative_words']
     colunas = df.columns.values.tolist()
-    dropcoluns.extend(colunas[19:31].copy())
-    dropcoluns.extend(colunas[50:60].copy())
-    #dropcoluns = [' timedelta']
+    #dropcoluns.extend(colunas[19:31].copy())
+    #dropcoluns.extend(colunas[50:60].copy())
     df.drop(dropcoluns, axis=1, inplace=True)
     return df
 
@@ -64,8 +64,9 @@ def Agrupamento_Categoria(df):
 def Renomeando_columns_int(df):
     nomeColunaAnt = ['url', ' n_tokens_title', ' n_tokens_content', ' num_hrefs', ' num_self_hrefs',
             ' num_imgs', ' num_videos', ' num_keywords', ' is_weekend', ' shares']
-    nomeColunaNew = ['Link', 'Num_palavras_titulo', 'Num_palavras_conteudo', 'Num_links_gerais', 'Num_links_noticias',
-              'Num_imagens', 'Num_videos', 'Num_palavras-chaves', 'Publicado_fim_semana', 'Compartilhamentos']
+    nomeColunaNew = nomeColunaAnt.copy()
+    #nomeColunaNew = ['Link', 'Num_palavras_titulo', 'Num_palavras_conteudo', 'Num_links_gerais', 'Num_links_noticias',
+    #          'Num_imagens', 'Num_videos', 'Num_palavras-chaves', 'Publicado_fim_semana', 'Compartilhamentos']
     dictionary = dict(zip(nomeColunaAnt, nomeColunaNew))
     df.rename(columns=dictionary, inplace=True)
     for coluna in nomeColunaNew:
@@ -78,8 +79,9 @@ def Renomeando_columns_int(df):
 def Renomeando_columns_float(df):
     nomeColunaAnt = [' average_token_length', ' n_unique_tokens', ' n_non_stop_words',
                      ' global_subjectivity', ' global_rate_positive_words', ' global_rate_negative_words']
-    nomeColunaNew = ['Comprimento_medio_palavras', 'Taxa_palavras_unicas', 'Taxa_palavras_Continuas',
-                     'Subjetividade_texto', 'Taxa_palavras_positivas', 'Taxa_palavras_negativas']
+    nomeColunaNew = nomeColunaAnt.copy()
+    #nomeColunaNew = ['Comprimento_medio_palavras', 'Taxa_palavras_unicas', 'Taxa_palavras_Continuas',
+    #                 'Subjetividade_texto', 'Taxa_palavras_positivas', 'Taxa_palavras_negativas']
     dictionary = dict(zip(nomeColunaAnt, nomeColunaNew))
     df.rename(columns=dictionary, inplace=True)
     return df
@@ -124,7 +126,7 @@ def classifica_niv_popularidade(row):
     entradas = [dfcond_nv_popu['20%'], dfcond_nv_popu['40%'], dfcond_nv_popu['60%'], dfcond_nv_popu['80%'], dfcond_nv_popu['max']]
     saidas = ['1', '2', '3', '4', '5']
     for n in range(len(entradas)):
-        if int(row['Compartilhamentos']) <= int(entradas[n]):
+        if int(row[' shares']) <= int(entradas[n]):
             val = saidas[n]
             break
     return val
@@ -133,7 +135,6 @@ def gera_amostragem(data_inicial='2013-01-01', data_final='2014-12-31', gerar_cs
     global dfcond_nv_popu
     if not if_existente:
         df = pd.read_csv('bases/OnlineNewsPopularity.csv')  # leitura da base
-        df = Reducao_drop_columns(df)
         df = Criacao_data_column(df)
         df = Agrupamento_Dias_Semana(df)
         df = Agrupamento_Categoria(df)
@@ -141,9 +142,11 @@ def gera_amostragem(data_inicial='2013-01-01', data_final='2014-12-31', gerar_cs
         df = Renomeando_columns_float(df)
         df['Dia_Publicado'] = df.apply(Numerizacao_Dias_Semana, axis=1)
         df['Categoria_Noticia'] = df.apply(Numerizacao_Categoria, axis=1)
-        dfcond_nv_popu = df['Compartilhamentos'].describe(percentiles=[.20, .40, .60, .80])
+        dfcond_nv_popu = df[' shares'].describe(percentiles=[.20, .40, .60, .80])
+        print(dfcond_nv_popu)
         df['Nivel_Popularidade'] = df.apply(classifica_niv_popularidade, axis=1)
         df = cria_amostragem_data(data_inicial, data_final, df)
+        df = Reducao_drop_columns(df)
         if gerar_csv:
             df.to_csv('bases/OnlineNewsPopularity_pre-processamento_' + data_inicial + '_to_' + data_final + '.csv', sep=',', index=False)
         return df
@@ -156,4 +159,4 @@ def gera_amostragem(data_inicial='2013-01-01', data_final='2014-12-31', gerar_cs
 
 
 if __name__ == "__main__":
-    gera_amostragem()
+    gera_amostragem(data_inicial='2013-01-01', data_final='2013-12-31')

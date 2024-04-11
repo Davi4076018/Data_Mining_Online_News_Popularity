@@ -23,9 +23,9 @@ def min_max_nomalization(df, target, features):
     return normalized_minmax
 
 def plot_matriz_correlacao(normalized_minmax):
-    plt.figure(figsize=(20, 12))
-    sns.heatmap(normalized_minmax.corr(), annot=True, cmap='coolwarm', fmt='.2f', linewidths=2)
-    plt.title('Correlation Matrix')
+    heatmap = sns.heatmap(df.corr()[['Nivel_Popularidade']].sort_values(by='Nivel_Popularidade', ascending=False), vmin=-1, vmax=1,
+                          annot=True, cmap='GnBu',  xticklabels=True, yticklabels=True)
+    heatmap.set_title('Features correlacionados com o Target', fontdict={'fontsize': 12}, pad=18)
     plt.show()
 
 
@@ -35,7 +35,7 @@ def VisualizePcaProjection(finalDf, targetColumn):
     ax = fig.add_subplot(1, 1, 1)
     ax.set_xlabel(colunas_nomes[0], fontsize=15)
     ax.set_ylabel(colunas_nomes[1], fontsize=15)
-    ax.set_title('4 component PCA', fontsize=20)
+    ax.set_title('2 component PCA', fontsize=20)
     targets = [1, 2, 3, 4, 5]
     colors = ['r', 'g', 'b', 'y', 'purple']
     for target, color in zip(targets, colors):
@@ -55,7 +55,7 @@ def VisualizePca3dProjection(finalDf, targetColumn):
     ax.set_xlabel(colunas_nomes[0], fontsize=15)
     ax.set_ylabel(colunas_nomes[1], fontsize=15)
     ax.set_zlabel(colunas_nomes[2], fontsize=15)
-    ax.set_title('4 component PCA', fontsize=20)
+    ax.set_title('3 component PCA', fontsize=20)
     targets = [1, 2, 3, 4, 5]
     colors = ['r', 'g', 'b', 'y', 'purple']
     for target, color in zip(targets, colors):
@@ -70,10 +70,13 @@ def VisualizePca3dProjection(finalDf, targetColumn):
 
 
 if __name__ == "__main__":
-    df = gera_amostragem(data_inicial='2013-01-01', data_final='2014-12-31', gerar_csv=True, if_existente=True)
+    df = gera_amostragem(data_inicial='2013-01-01', data_final='2013-12-31', gerar_csv=True, if_existente=True)
+    print(df.corr()[['Nivel_Popularidade']].sort_values(by='Nivel_Popularidade', ascending=False))
+    print(df.columns.values.tolist())
     print(df.describe().to_string())
     target = 'Nivel_Popularidade'
-    features = df.drop(['Link', 'Nivel_Popularidade', 'Data_Publicado'], axis=1).columns.values.tolist()
+    features = df.columns.values.tolist()
+
     zscore_norm = z_score_nomalization(df, target, features)
     min_max_norm = min_max_nomalization(df, target, features)
     print(zscore_norm.describe().to_string())
@@ -81,17 +84,19 @@ if __name__ == "__main__":
     plot_matriz_correlacao(min_max_norm)
 
     # PCA
-    x_zscorePCA = StandardScaler().fit_transform(df.loc[:, ['Publicado_fim_semana', 'Num_links_gerais', 'Num_imagens']].values)
+    x_zscorePCA =  MinMaxScaler().fit_transform(df.loc[:, features].values)
 
     pca = PCA()
     pca3d = PCA(n_components=3)
     principalComponents = pca.fit_transform(x_zscorePCA)
 
-
     principalDf = pd.DataFrame(data=principalComponents[:, 0:2],
-                               columns=['Publicado_fim_semana', 'Num_links_gerais'])
+                               columns=['principal component 1',
+                                        'principal component 2'])
     principalDf3d = pd.DataFrame(data=principalComponents[:, 0:3],
-                                 columns=['Publicado_fim_semana', 'Num_links_gerais', 'Num_imagens'])
+                                 columns=['principal component 1',
+                                          'principal component 2',
+                                          'principal component 3'])
 
     finalDf = pd.concat([principalDf, df[[target]]], axis=1)
     finalDf3 = pd.concat([principalDf3d, df[[target]]], axis=1)
