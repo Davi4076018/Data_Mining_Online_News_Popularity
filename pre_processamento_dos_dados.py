@@ -143,6 +143,7 @@ def gera_amostragem(data_inicial='2013-01-01', data_final='2014-12-31', gerar_cs
         df['Dia_Publicado'] = df.apply(Numerizacao_Dias_Semana, axis=1)
         df['Categoria_Noticia'] = df.apply(Numerizacao_Categoria, axis=1)
         dfcond_nv_popu = df[' shares'].describe(percentiles=[.20, .40, .60, .80])
+        dfcond_nv_popu = df['Compartilhamentos'].describe(percentiles=[.20, .40, .60, .80])
         print(dfcond_nv_popu)
         df['Nivel_Popularidade'] = df.apply(classifica_niv_popularidade, axis=1)
         df = cria_amostragem_data(data_inicial, data_final, df)
