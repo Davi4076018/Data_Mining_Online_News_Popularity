@@ -6,7 +6,7 @@ from sklearn.preprocessing import MinMaxScaler
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from pre_processamento_dos_dados import gera_amostragem
+from pre_processamento_dos_dados_1 import gera_amostragem
 
 def z_score_nomalization(df, target, features):
     x = df.loc[:, features].values
