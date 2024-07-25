@@ -101,8 +101,6 @@ if __name__ == "__main__":
     finalDf = pd.concat([principalDf, df[[target]]], axis=1)
     finalDf3 = pd.concat([principalDf3d, df[[target]]], axis=1)
 
-    print(finalDf)
-    print(finalDf3)
     VisualizePcaProjection(finalDf, target)
     VisualizePca3dProjection(finalDf3, target)
 
